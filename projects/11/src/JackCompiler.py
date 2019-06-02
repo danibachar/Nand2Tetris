@@ -138,16 +138,6 @@ for filename in files:
 			#token = token.replace("$$$","")
 			token = token.replace("_", " ")
 
-		# If it's a symbol, make sure to format it properly
-		# if(token == "<"):
-		# 	token = "&lt;"
-		# if(token == ">"):
-		# 	token = "&gt;"
-		# if(token == "\""):
-		# 	token = "&quot;"
-		# if(token == "&"):
-		# 	token = "&amp;"
-
 		tokens.append(token)
 
 	# Create an agent and initialize it with the token list and the current file name

@@ -11,7 +11,7 @@ class Agent:
         if self.cur_idx < len(self.tokens):
             return self.tokens[self.cur_idx]
         else:
-            return 'NO_MORE_TOKENS'
+            return 'NO_TOKENS'
 
     def advance(self):
         if self.cur_idx < len(self.tokens):
@@ -20,7 +20,7 @@ class Agent:
            self.cur_idx += 1
            return token
         else:
-            raise Exception("No more Tokens")
+            return 'NO_TOKENS'
 
     def writeFunction(self, class_name, sub_name, local_var_count):
         tmp = ".".join([class_name, sub_name])
@@ -52,14 +52,12 @@ class Agent:
         tmp = " ".join(['pop', segment, str(index)])
         self.write_new_line(tmp)
 
-    def writeArithmatic(self, operator, helper=None):
-        tmp = ""
+    def writeArithmatic(self, operator):
+        tmp = operator
         if operator == '+':
             tmp = 'add'
-        if operator == '-' and helper == None: # Distinguish between subtraction and - negtive number
+        if operator == '-':
             tmp = 'sub'
-        if operator == '-' and helper == 'NEG': # Distinguish between subtraction and -negtive number
-            tmp = 'neg'
         if operator == '~':
             tmp = "not"
         if operator == '<':

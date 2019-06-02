@@ -47,25 +47,25 @@ class CompliationEngine(object):
     # ('constructor' | 'function' | 'method') ('void' | type) subroutineName
     # '(' parameterList ')' subroutineBody
     def compileSubroutineDec(self):
-        function_type = self._agent.cur # 'constructor' | 'function' | 'method' kw
+        f_type = self._agent.cur # 'constructor' | 'function' | 'method' kw
 
         self._agent.advance() # 'void' | 'type' kw/identifier
-        function_name = self._agent.advance() # 'subroutineName' identifier
+        f_name = self._agent.advance() # 'subroutineName' identifier
 
         self._symbol_table.startSubRoutine()
-        if function_type == 'method':
+        if f_type == 'method':
             self._symbol_table.define(['this', self._class_name, 'argument'])
 
         self._agent.advance() # '('
-        self._agent.advance() # 'first argument'
+        self._agent.advance()
 
-        if self._agent.cur != ')':
+        if self._agent.cur != ')': # Extra validation for edge cases
             self.compileParameterList()
 
-        self.compileSubroutineBody(function_type, function_name)
+        self.compileSubroutineBody(f_type, f_name)
 
     # '{' varDec* statements '}'
-    def compileSubroutineBody(self, function_type, function_name):
+    def compileSubroutineBody(self, f_type, f_name):
         self._agent.advance() # '{' symbol
         token = self._agent.advance() # Statements
 
@@ -77,17 +77,19 @@ class CompliationEngine(object):
         local_variables = self._symbol_table.varCount('local')
 
         # VM Code preps
-        self._agent.writeFunction(self._class_name, function_name, local_variables)
-        if function_name == 'new':
+        self._agent.writeFunction(self._class_name, f_name, local_variables)
+        # Handling Constructor
+        if f_name == 'new':
             no_of_fields = self._symbol_table.varCount('field')
             self._agent.writePush('constant', no_of_fields)
             self._agent.writeCall('Memory', 'alloc', 1)
             self._agent.writePop('pointer', 0)
-        if function_type == 'method':
+        # Handling instance Method
+        if f_type == 'method':
             self._agent.writePush('argument', 0)
             self._agent.writePop('pointer', 0)
 
-        if token != '}':
+        if token != '}': # Extra validation for edge cases
             self.compileStatements()
 
         self._agent.advance()  # '}' symbol
@@ -100,8 +102,7 @@ class CompliationEngine(object):
         while (token in ['int','char','boolean']) or isIdentifier(token):
             id_type = self._agent.cur # 'int' | 'bool' | 'string' | 'type' kw/identifier
             identifier = self._agent.advance() # 'varName' identifier
-            identifier_details = [identifier, id_type, 'argument']
-            self._symbol_table.define(identifier_details)
+            self._symbol_table.define([identifier, id_type, 'argument'])
 
             # Check if it's a comma, process if it is.
 		    # If it's not, it's the last variable name, so skip it
@@ -112,14 +113,16 @@ class CompliationEngine(object):
 
     # 'var' type varName (',' varName)* ';'
     def compileVarDec(self):
+
+        # Loop to deal with all variable names, including the first one.
         while self._agent.cur == 'var':
             id_type = self._agent.advance() # 'int' | 'bool' | 'string' | 'type' kw/idenitfier
             identifier = self._agent.advance() # 'varName' identifier
             self._symbol_table.define([identifier, id_type, 'local'])
             self._agent.advance() # ',' symbol
 
+            # Handling case of int var1, var2, var3; all vars should have the same type
             while self._agent.cur == ',':
-                identifier_details = []
                 identifier = self._agent.advance() # 'varName' identifier
                 self._symbol_table.define([identifier, id_type, 'local'])
                 self._agent.advance()# ',' symbol
@@ -150,23 +153,21 @@ class CompliationEngine(object):
         segment = self._symbol_table.kindOf(identifier)
         index = str(self._symbol_table.indexOf(identifier))
 
-        token = self._agent.advance()
-        if_array = False
-        # Hanlding Arrays
-        if token == '[':
-            if_array = True
-            token = self._agent.advance()
-            self.compileExpression() # ']'
+        is_array = self._agent.advance() == '['
+
+        if is_array:
+            self._agent.advance()
+            self.compileExpression()
             self._agent.writePush(segment, index)
-            self._agent.writeArithmatic('+')
+            self._agent.writeArithmatic('add')
             self._agent.advance()
 
-        self._agent.advance()
+        self._agent.advance() # '=' symbol
         self.compileExpression()
 
-        # Got a little help from to crack it down...
+        # Got a little help from github to crack it down...
         # https://github.com/havivha/Nand2Tetris/blob/master/11/JackAnalyzer/Parser.py (line 246)
-        if if_array:
+        if is_array:
             self._agent.writePop('temp', 0)
             self._agent.writePop('pointer', 1)
             self._agent.writePush('temp', 0)
@@ -174,8 +175,9 @@ class CompliationEngine(object):
         else:
             self._agent.writePop(segment, index)
 
-        self._agent.advance()
+        self._agent.advance() # ';' symbol
 
+    # 'if' '(' expression ')' '{' statements '}' ( 'else' '{' statements '}' )?
     def compileIf(self):
         self._dynamic_label_counter += 1 # for linear label names
         self._agent.advance() # '(' symbool
@@ -184,10 +186,10 @@ class CompliationEngine(object):
         self.compileExpression()
 
         self._agent.writeArithmatic('~')
-        label = self._class_name + '.' + 'if.' + str(self._dynamic_label_counter) + '.LABEL1'
+        label = ".".join([self._class_name, 'if',  str(self._dynamic_label_counter), 'LABEL1'])
         self._agent.writeIfGoto(label)
 
-        goto_label = self._class_name + '.' + 'if.' + str(self._dynamic_label_counter) + '.LABEL2'
+        goto_label = ".".join([self._class_name, 'if', str(self._dynamic_label_counter), 'LABEL2'])
 
         self._agent.advance()
         if self._agent.advance() != '}': # Making sure
@@ -196,13 +198,13 @@ class CompliationEngine(object):
         self._agent.writeGoto(goto_label)
         self._agent.writeLabel(label)
 
-        # optional else Command
+        # Only process an else clause if it exists
         if self._agent.advance() == "else": # 'else' kw
             self._agent.advance() # '{' symbol
             if self._agent.advance() != '}':
                 self.compileStatements()
 
-            self._agent.advance()
+            self._agent.advance() # '{' symbol
 
         self._agent.writeLabel(goto_label)
 
@@ -218,7 +220,7 @@ class CompliationEngine(object):
 
         self.compileExpression()
 
-        self._agent.writeArithmatic('~') # ~cond
+        self._agent.writeArithmatic('~')
 
         if_label = '.'.join([self._class_name, 'w', str(self._dynamic_label_counter), 'LABEL2'])
         self._agent.writeIfGoto(if_label)
@@ -233,6 +235,7 @@ class CompliationEngine(object):
 
         self._agent.advance()
 
+    # 'do' subroutineCall ';
     def compileDo(self):
         identifier = self._agent.advance()
         token = self._agent.advance() # like peek - '.' or '('
@@ -246,7 +249,8 @@ class CompliationEngine(object):
         # Deal with '.' as the next token, i.e. with a dot-refernce subroutineCall
         #  ( className | varName) '.' subroutineName '(' expressionList ')'
         class_name = identifier
-        no_of_arguments = 0
+        arg_count = 0
+        id_type = None
         if token == ".":
             method_or_function = self._agent.advance()
             self._agent.advance() # '('
@@ -257,129 +261,167 @@ class CompliationEngine(object):
         if token == '(':
             class_name = self._class_name
             method_or_function = identifier
-            no_of_arguments += 1
+            arg_count += 1
             self._agent.writePush('pointer', '0')
-            id_type = None
 
         token = self._agent.advance()
 
-        if id_type != None:
+        if id_type:
             segment = self._symbol_table.kindOf(identifier)
             index = self._symbol_table.indexOf(identifier)
             self._agent.writePush(segment, index)
-            no_of_arguments += 1
+            arg_count += 1
             class_name = id_type
 
-        no_arguments = 0
         if token != ')':
-            no_of_arguments += self.compileExpressionList() # Returns the number of arguemnt we need to add
+            arg_count += self.compileExpressionList() # Returns the number of arguemnt we need to add
 
 
-        self._agent.writeCall(class_name, method_or_function, no_of_arguments)
-        self._agent.advance() # ';'
+        self._agent.writeCall(class_name, method_or_function, arg_count)
+        self._agent.advance()
 
-        # 'void functions will return constant 0 which should be discarded'
         self._agent.writePop('temp', '0')
         self._agent.advance()
 
+    # 'return' expression? ';'
     def compileReturn(self):
 
         if self._agent.advance() == ';':
             # Deal with end function
             self._agent.writePush('constant', '0')
         else:
-            # Deal with expression
+            # Deal with an optional expression
             self.compileExpression()
 
         self._agent.writeReturn()
         self._agent.advance()
 
+    # (expression (',' expression)* )?
     def compileExpressionList(self):
 
+        # The next thing after an expression list is always a closing parantheses
+	    # If we're not at a closing parantheses, then there's at least one expression here
+	    # Otherwise, compile at least one expression
         args_to_add = 1
-        self.compileExpression() # returns ','
+        self.compileExpression()
 
+        # If there's a comma, there's at least two expresseions here, Parse all of them
         while self._agent.cur == ",":
             args_to_add += 1
-            self._agent.advance()
+            self._agent.advance() # ',' symbol
             self.compileExpression()
 
         return args_to_add
 
+    # term (op term)*
     def compileExpression(self):
-        # An expression is always, at the very least, a term
+
+        # An expression is always, at the very least, a ter
         self.compileTerm()
 
         possible_operator = self._agent.cur
         # Deal with operators / entity operators (&;lt etc.)
         if possible_operator in opperators:
+            # Process each operator and compile the term after it
             self._agent.advance()
             self.compileTerm()
-            self._agent.writeArithmatic(possible_operator)
+            self._agent.writeArithmatic(possible_operator) # 'op' symbol
 
+    # integerConstant | stringConstant | keywordConstant | varName |
+    # varName '[' expression ']' | subroutineCall | '(' expression ')' | (unaryOp term)
     def compileTerm(self):
         token = self._agent.cur
 
+
+        # Since this is the most complicated part in the compiler, it's broken
+	    # into parts that often repeat themselves. Easier debugging and all
+
+        # Deal with integer constants
         if isIntegerConstant(token):
             self._agent.writePush('constant', token)
+
+        # Deal with keyword constants
         elif token == 'true':
             self._agent.writePush('constant', '1')
-            self._agent.writeArithmatic('-', 'NEG')
+            self._agent.writeArithmatic('neg')
         elif token in ['false', 'null']:
             self._agent.writePush('constant', '0')
         elif token == 'this':
             self._agent.writePush('pointer', '0')
+
+        # Dealing with Unary operators
         elif token == '-':
-            return self.compileNeg()
+            self._agent.advance()
+            self.compileTerm()
+            self._agent.writeArithmatic('neg')
+            return
         elif token == "~":
-            return self.compileNot()
+            if self._agent.advance() != '(':
+                self.compileTerm()
+            else:
+                self._agent.advance()
+                self.compileExpression()
+                self._agent.advance()
+            self._agent.writeArithmatic('not')
+            return
+
+        # Deal with '(' expression ')'
         elif token == "(":
-            token = self._agent.advance() # Term token
-            self.compileExpression() # Returns ')'
+            token = self._agent.advance()
+            self.compileExpression()
+
+       # Deal with '[' as the next token, i.e. with referencing an index in an array
+	   # varName '[' expression ']'
         elif self._agent.peek() == "[":
             index = self._symbol_table.indexOf(token)
             segment = self._symbol_table.kindOf(token)
             self._agent.writePush(segment, index)
 
-            self._agent.advance() # '['
+            self._agent.advance()
 
             token = self._agent.advance()
-            self.compileExpression() # return value is ']'
+            self.compileExpression()
 
-            self._agent.writeArithmatic('+')
+            self._agent.writeArithmatic('add')
             self._agent.writePop('pointer', '1')
             self._agent.writePush('that', '0')
 
+       # Deal with '.' as the next token, i.e. with a dot-refernce subroutineCall
+	   #  ( className | varName) '.' subroutineName '(' expressionList ')'
         elif self._agent.peek() == ".":
             identifier = token
-            self._agent.advance() # '.'
-            method_or_function = self._agent.advance()
+            self._agent.advance()
+            f_name = self._agent.advance()
+            self._agent.advance()
+            self._agent.advance()
 
-            self._agent.advance() # '('
-
-            token = self._agent.advance()
-            no_of_arguments = 0
+            arg_count = 0
 
             class_name = identifier
             id_type = self._symbol_table.typeOf(identifier)
 
-            if id_type != None:
+            if id_type:
                 segment = self._symbol_table.kindOf(identifier)
                 index = self._symbol_table.indexOf(identifier)
                 self._agent.writePush(segment, index)
-                no_of_arguments += 1
+                arg_count += 1
                 class_name = id_type
 
-            if token != ")":
-                no_of_arguments += self.compileExpressionList() # Returns the number of arguemnt we need to add
+            if self._agent.cur != ")":
+                arg_count += self.compileExpressionList() # Returns the number of arguemnt we need to add
 
-            self._agent.writeCall(class_name, method_or_function, no_of_arguments)
+            self._agent.writeCall(class_name, f_name, arg_count)
+
+        # Deal with simple strings, i.e stringConstant | varName - more exact strings expressions
         elif '$' in token :
+            # Clearing string $ indicators
             token = str.replace(token, '$', '')
+            # as many chars as in the striped token constants
             self._agent.writePush('constant', len(token))
+            # New String Class
             self._agent.writeCall('String', 'new', 1)
             for idx in range(0, len(token)):
-                self._agent.writePush('constant', ord(token[idx]))
+                self._agent.writePush('constant', ord(token[idx])) # ord get the HASCII value of a character
                 self._agent.writeCall('String', 'appendChar', 2)
         else:
             index = self._symbol_table.indexOf(token)
@@ -390,45 +432,24 @@ class CompliationEngine(object):
                 print("fail to fetch index from symble table for token - {}".format(token))
             self._agent.writePush(segment, index)
 
-        token = self._agent.advance()
-        return token
+        self._agent.advance()
 
-    def compileNeg(self):
-        token = self._agent.advance()
-        token = self.compileTerm()
-        self._agent.writeArithmatic('-', 'NEG')
-        return token
-
-    def compileNot(self):
-        token = self._agent.advance() # '('?
-        if token != '(':
-            token = self.compileTerm()
-        else:
-            token = self._agent.advance() #
-            self.compileExpression() # returns inner ')' res
-            token = self._agent.advance()  # outer ')'
-
-        self._agent.writeArithmatic('~')
-        return token
-
+    # classVarDec: ('static' | 'field' ) type varName (' , ' varName)* ' ; '
     def compileClassVarDec(self):
-        class_var_modifer = self._agent.cur # 'field' or 'static'
+        class_var = self._agent.cur # 'static' | 'field' kw
 
-        # primitive or user defined class
-        class_var_type = self._agent.advance()
+        type = self._agent.advance()
         identifier = self._agent.advance()
-        self._symbol_table.define([identifier, class_var_type, class_var_modifer])
+        self._symbol_table.define([identifier, type, class_var])
 
-        token = self._agent.advance()
+        self._agent.advance()
 
-        while token == ',':
-            identifier =  self._agent.advance()
-            self._symbol_table.define([identifier, class_var_type, class_var_modifer])
-            token = self._agent.advance()
+        # Check if it's a comma, process if it is.
+		# If it's not, it's the last variable name, so skip it
+        while self._agent.cur == ',':
+            identifier =  self._agent.advance() # 'varName' identifier
+            self._symbol_table.define([identifier, type, class_var])
+            self._agent.advance()
 
-        token = self._agent.advance()
-
-        if token in ['field', 'static']:
-            return self.compileClassVarDec()
-
-        return token
+        if self._agent.advance() in ['field', 'static']:
+            self.compileClassVarDec()

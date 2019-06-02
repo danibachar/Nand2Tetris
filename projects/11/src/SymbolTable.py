@@ -14,12 +14,7 @@ SEGMENT_TO_IDENTIFIER_MAP = {
 
 class SymbolTable:
 
-
-
     def __init__(self):
-        self._class_table = []
-        self._func_table = []
-
         self._class_table = {}
         self._func_table = {}
 
@@ -39,7 +34,7 @@ class SymbolTable:
     def _reset_index_map_count(self, identifiers):
         for id in identifiers:
             self._index_map[id] = 0
-            
+
     # Public
     def define(self, identifier_details):
         name, id_type, kind = identifier_details[0], identifier_details[1], identifier_details[2]
@@ -55,7 +50,6 @@ class SymbolTable:
         self._index_map[kind] += 1
 
     def startSubRoutine(self):
-        self._func_table = []
         self._func_table = {}
         self._reset_index_map_count(FUNC_IDENTIFIERS)
 

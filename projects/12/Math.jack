@@ -82,20 +82,42 @@ class Math {
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
-      var int q, tmp1, tmp2;
-      if (y > x) {
+      var int q, tmp1, tmp2, newX, newY, res;
+      var boolean isXNegative, isYNegative;
+      let isXNegative = false;
+      let isYNegative = false;
+      if (x < 0) {
+        let isXNegative = true;
+      }
+      if (y < 0) {
+        let isYNegative = true;
+      }
+
+      let newX = Math.abs(x);
+      let newY = Math.abs(y);
+
+      if (newY > newX) {
         return 0;
       }
-      let tmp1 = y + y;
-      let q = Math.divide(x, tmp1);
-      let tmp2 = Math.multiply(q, y);
+      let tmp1 = newY + newY;
+      let q = Math.divide(newX, tmp1);
+
+      let tmp2 = Math.multiply(q, newY);
       let tmp2 = tmp2 + tmp2;
-      let tmp2 = x - tmp2;
-      if (tmp2 < y) {
-        return (q + q);
+      let tmp2 = newX - tmp2;
+
+      if (tmp2 < newY) {
+        let res = (q + q);
       } else {
-        return (q + q + 1);
+        let res = (q + q + 1);
       }
+      if (isXNegative) {
+        let res = -res;
+      }
+      if (isYNegative) {
+        let res = -res;
+      }
+      return res;
     }
 
     /** Returns the integer part of the square root of x. */
@@ -105,15 +127,15 @@ class Math {
       let bits = 16;
       let j = bits / 2 - 1;
       while( ~(j < 0) ) {
-        let tmp = bitArray[j]; // tmp = 2^j
+        let tmp = y + bitArray[j]; // tmp = 2^j;
         let tmp = Math.multiply(tmp, tmp); // tmp = tmp^2
         if (~(tmp > x) & (tmp > 0)) {
-          let y = y = bitArray[j];
+          let y = y + bitArray[j];
         }
         let j = j - 1;
       }
 
-      return y
+      return y;
     }
 
     /** Returns the greater number. */

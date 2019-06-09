@@ -30,7 +30,7 @@ class Math {
       let bitArray[12] = 4096;
       let bitArray[13] = 8192;
       let bitArray[14] = 16384;
-      let bitArray[15] = 16384 + 16384;
+      let bitArray[15] = 32768;
       return;
     }
 

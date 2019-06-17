@@ -12,34 +12,21 @@
 class Screen {
 
     static Array screen;
-    static Array bitArray;
 
     static boolean color; //true == black, false == white
     static int SCREEN_SIZE;
+    static int SCREEN_WIDTH;
+    static int SCREEN_HIGHT;
+    static int MAX_RADIUS;
 
     /** Initializes the Screen. */
     function void init() {
-      let screen = 16384;
-      let color = true;
+      let screen = 16384; //begin point of screen in memory
+      let color = true; //init with color on!
       let SCREEN_SIZE = 8192;
-
-      let bitArray = Array.new(16);
-      let bitArray[0] = 1;
-      let bitArray[1] = 2;
-      let bitArray[2] = 4;
-      let bitArray[3] = 8;
-      let bitArray[4] = 16;
-      let bitArray[5] = 32;
-      let bitArray[6] = 64;
-      let bitArray[7] = 128;
-      let bitArray[8] = 256;
-      let bitArray[9] = 512;
-      let bitArray[10] = 1024;
-      let bitArray[11] = 2048;
-      let bitArray[12] = 4096;
-      let bitArray[13] = 8192;
-      let bitArray[14] = 16384;
-      let bitArray[15] = 32768;
+      let SCREEN_WIDTH = 511;
+      let SCREEN_HIGHT = 255;
+      let MAX_RADIUS = 127;
 
       return;
     }
@@ -50,6 +37,7 @@ class Screen {
       let pixel = 0;
       while(pixel < SCREEN_SIZE){
         let screen[pixel] = false; //coloring to white
+        let pixel = pixel + 1;
       }
       return;
     }
@@ -63,12 +51,15 @@ class Screen {
 
     /** Draws the (x,y) pixel, using the current color. */
     function void drawPixel(int x, int y) {
-      var int add, mask;
-      // According to algorith given in class, presentation 12 page 147
+      var int add, mask, maskValue;
+
+      // According to algorithm given in class, presentation 12 page 147
       let add = (32*y) + (x/16);
       // Creating appropriate mask
-      let mask = bitArray[(x & 15)];
+      let maskValue = x & 15;//x - ((x/16)*16);
+      let mask = Math._powerOfTwo(maskValue);
       //Update the x % 16 bit in the word we got from the memory
+      // Writing directly to memory without usage of peek/poke is more efficient
       if (color) {
         let screen[add] = screen[add] | mask;
       } else {
@@ -79,35 +70,94 @@ class Screen {
 
     }
 
+
     /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
     function void drawLine(int x1, int y1, int x2, int y2) {
+        var int dx, dy, a, b, diff, tmp;
+
+        if(x1 > x2){
+            let tmp = x1;
+            let x1 = x2;
+            let x2 = tmp;
+
+            let tmp = y1;
+            let y1 = y2;
+            let y2 = tmp;
+        }
+
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+        let a = 0;
+        let b = 0;
+        let diff = a*dy - b*dx;
+
+        while ( ((a < dx) | (a = dx)) & ((b < dy) | (b = dy)) ) {
+
+          do Screen.drawPixel(x1+a, y1+b);
+
+          if (diff < 0 | diff = 0) {
+            let a = a + 1;
+            let diff = diff + dy;
+          } else {
+            let b = b + 1;
+            let diff = diff - dx;
+          }
+
+        }
+
         return;
     }
 
     /** Draws a filled rectangle whose top left corner is (x1, y1)
      * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
-    return;
+
+      //Filling out a rectangle in grid manner from top to bottom
+      while( ~(y1 > y2) ) {
+        do Screen.drawLine(x1, y1, x2, y1);
+        let y1 = y1 + 1;
+      }
+
+      return;
     }
 
     /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
     function void drawCircle(int x, int y, int r) {
-    return;
+      var int dx, dy;
+      var int r_squared;
+
+      let dy = -r;
+      let r_squared = r*r;
+      while( ~(dy > r) ) {
+        let dx = Math.sqrt(r_squared-(dy*dy));
+        do Screen.drawLine(x-dx, y+dy, x+dx, y+dy);
+        let dy = dy + 1;
+      }
+
+      return;
     }
 
     //Private
-    // Based on - https://www.omnicalculator.com/math/modulo - TODO - we can move this to math
-    function int _mod(int dividend, int divisor) {
-       var int quotient, a, res;
-       let quotient = Math.divide(dividend, divisor);
-       //do Output.printInt(quotient);
-       let a = Math.multiply(quotient, divisor);
-       //do Output.printInt(a);
-       let res = dividend - a;
-       //do Output.printInt(res);
-       if (res < 0) {
-          let res = -res;
-       }
-       return res;
+    //Make sure that the point is not out of screen bounds
+    function boolean _isValidPoint(int x, int y) {
+      if ((x > SCREEN_WIDTH) | (y > SCREEN_HIGHT) | (x < 0) | (y < 0)) {
+        do Output.printString("Screen Error");
+        return false;
+      }
+      return true;
+    }
+
+    //Make sure that when we draw the circle we will go out of screen bounds
+    function boolean _isValidRadius(int x, int y, int r) {
+      var boolean isValid;
+      //validate center point
+      let isValid = Screen._isValidPoint(x, y);
+
+      //Validate radius
+      if (r > MAX_RADIUS | r < 0) {
+        let isValid = false;
+      }
+
+      return isValid;
     }
 }

@@ -30,7 +30,7 @@ class Math {
       let bitArray[12] = 4096;
       let bitArray[13] = 8192;
       let bitArray[14] = 16384;
-      let bitArray[15] = 32768;
+      let bitArray[15] = 16384+16384;
       return;
     }
 
@@ -39,7 +39,7 @@ class Math {
     if ((bitArray[j] & x) = 0) {
         return 0;
     }
-    return 1;
+      return 1;
     }
 
     /** Returns the absolute value of x. */
@@ -152,5 +152,25 @@ class Math {
           return b;
       }
       return a;
+    }
+
+    // Private
+    function int _powerOfTwo(int x) {
+      return bitArray[x];
+    }
+
+    // Based on - https://www.omnicalculator.com/math/modulo - TODO - we can move this to math
+    function int _mod(int dividend, int divisor) {
+       var int quotient, a, res;
+       let quotient = Math.divide(dividend, divisor);
+       //do Output.printInt(quotient);
+       let a = Math.multiply(quotient, divisor);
+       //do Output.printInt(a);
+       let res = dividend - a;
+       //do Output.printInt(res);
+       if (res < 0) {
+          let res = -res;
+       }
+       return res;
     }
 }

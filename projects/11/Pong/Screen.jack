@@ -71,7 +71,6 @@ class Screen {
 
     }
 
-
     /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
     function void drawLine(int x1, int y1, int x2, int y2) {
         var int dx, dy, a, b, diff, x, y;
@@ -94,7 +93,7 @@ class Screen {
         let b = 0;
         let diff = 0;
 
-        while (~((a > dx) | (b > dy))) {
+        while (~((b > dy) | (a > dx))) {
 
           if (x2 < x1) { // going right -> left
             let x = x1 - a;

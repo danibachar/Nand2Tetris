@@ -60,6 +60,7 @@ class Screen {
       let mask = Math._powerOfTwo(maskValue);
       //Update the x % 16 bit in the word we got from the memory
       // Writing directly to memory without usage of peek/poke is more efficient
+      // No over head of the function call...
       if (color) {
         let screen[add] = screen[add] | mask;
       } else {

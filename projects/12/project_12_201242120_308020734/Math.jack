@@ -1,0 +1,176 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Math.jack
+
+/**
+ * A library of commonly used mathematical functions.
+ * Note: Jack compilers implement multiplication and division using OS method calls.
+ */
+class Math {
+
+    static Array bitArray;
+
+
+    /** Initializes the library. */
+    function void init() {
+      let bitArray = Array.new(16);
+      let bitArray[0] = 1;
+      let bitArray[1] = 2;
+      let bitArray[2] = 4;
+      let bitArray[3] = 8;
+      let bitArray[4] = 16;
+      let bitArray[5] = 32;
+      let bitArray[6] = 64;
+      let bitArray[7] = 128;
+      let bitArray[8] = 256;
+      let bitArray[9] = 512;
+      let bitArray[10] = 1024;
+      let bitArray[11] = 2048;
+      let bitArray[12] = 4096;
+      let bitArray[13] = 8192;
+      let bitArray[14] = 16384;
+      let bitArray[15] = 16384+16384;
+      return;
+    }
+
+    /** Private method if jth bit of x is 1 */
+    function boolean _bit(int x, int j){
+    if ((bitArray[j] & x) = 0) {
+        return 0;
+    }
+      return 1;
+    }
+
+    /** Returns the absolute value of x. */
+    function int abs(int x) {
+      var int res;
+      let res = x;
+      if (x < 0) {
+        let res = -x;
+      }
+      return res;
+    }
+
+    /** Returns the product of x and y.
+     *  When a Jack compiler detects the multiplication operator '*' in the
+     *  program's code, it handles it by invoking this method. In other words,
+     *  the Jack expressions x*y and multiply(x,y) return the same value.
+     */
+    function int multiply(int x, int y) {
+      var int sum, shiftedX,j;
+
+      let sum = 0;
+      let shiftedX = x;
+      let j = 0;
+
+      while(j < 16){
+          if(Math._bit(y,j)){
+              let sum = sum + shiftedX;
+          }
+          let shiftedX = shiftedX + shiftedX;
+          let j = j + 1;
+      }
+
+      return sum;
+
+    }
+
+    /** Returns the integer part of x/y.
+     *  When a Jack compiler detects the multiplication operator '/' in the
+     *  program's code, it handles it by invoking this method. In other words,
+     *  the Jack expressions x/y and divide(x,y) return the same value.
+     */
+    function int divide(int x, int y) {
+      var int q, tmp1, tmp2, newX, newY, res;
+      var boolean isXNegative, isYNegative;
+      let isXNegative = false;
+      let isYNegative = false;
+      if (x < 0) {
+        let isXNegative = true;
+      }
+      if (y < 0) {
+        let isYNegative = true;
+      }
+
+      let newX = Math.abs(x);
+      let newY = Math.abs(y);
+
+      if (newY > newX) {
+        return 0;
+      }
+      let tmp1 = newY + newY;
+      let q = Math.divide(newX, tmp1);
+
+      let tmp2 = Math.multiply(q, newY);
+      let tmp2 = tmp2 + tmp2;
+      let tmp2 = newX - tmp2;
+
+      if (tmp2 < newY) {
+        let res = (q + q);
+      } else {
+        let res = (q + q + 1);
+      }
+      if (isXNegative) {
+        let res = -res;
+      }
+      if (isYNegative) {
+        let res = -res;
+      }
+      return res;
+    }
+
+    /** Returns the integer part of the square root of x. */
+    function int sqrt(int x) {
+      var int y, j, bits, tmp;
+      let y = 0;
+      let bits = 16;
+      let j = bits / 2 - 1;
+      while( ~(j < 0) ) {
+        let tmp = y + bitArray[j]; // tmp = 2^j;
+        let tmp = Math.multiply(tmp, tmp); // tmp = tmp^2
+        if (~(tmp > x) & (tmp > 0)) {
+          let y = y + bitArray[j];
+        }
+        let j = j - 1;
+      }
+
+      return y;
+    }
+
+    /** Returns the greater number. */
+    function int max(int a, int b) {
+      if ( a > b ) {
+          return a;
+      }
+      return b;
+    }
+
+    /** Returns the smaller number. */
+    function int min(int a, int b) {
+      if ( a > b ) {
+          return b;
+      }
+      return a;
+    }
+
+    // Private
+    function int _powerOfTwo(int x) {
+      return bitArray[x];
+    }
+
+    // Based on - https://www.omnicalculator.com/math/modulo - TODO - we can move this to math
+    function int _mod(int dividend, int divisor) {
+       var int quotient, a, res;
+       let quotient = Math.divide(dividend, divisor);
+       //do Output.printInt(quotient);
+       let a = Math.multiply(quotient, divisor);
+       //do Output.printInt(a);
+       let res = dividend - a;
+       //do Output.printInt(res);
+       if (res < 0) {
+          let res = -res;
+       }
+       return res;
+    }
+}

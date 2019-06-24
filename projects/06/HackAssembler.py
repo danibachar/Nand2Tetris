@@ -10,6 +10,7 @@ class Parser:
         self._line_index = 0
         self._lines = []
         f = open(src_file_name)
+        # First assesment of the Assembler
         for line in f.readlines():
             strip_line = line.lstrip()
             # Skipping none relevant
@@ -170,10 +171,8 @@ class Assembler:
 
         self.f = open(dst_file_name, 'w')
 
-        counter = 16
-        # Run Loop
+        # Run Loop - Main Logic
         while self._parser.has_more_command():
-            # TODO - logic!
             binary_to_commit = None
 
             command_type = self._parser.command_type()

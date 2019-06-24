@@ -1,0 +1,207 @@
+// Based on the square game
+
+class SnakeGame {
+   field Snake snake; 
+   field Square apple;
+   field int direction; // the snakes's current direction: 
+                        // 0=none, 1=up, 2=down, 3=left, 4=right
+   //Board Limits
+   field int maxX;
+   field int minX;
+   field int maxY;
+   field int minY;
+
+   // Sanke Size
+   field int maxSnakeLength;
+   field int snakeWidth;
+   field int initSnakeLength;
+
+   // Game fields
+   field boolean isPlaying;
+   field int delay;
+
+   //Random number generator
+   field int seed;
+
+
+   constructor SnakeGame new(int difficulty) {
+
+      let isPlaying = true;
+      if (difficulty < 1 | difficulty > 10) {
+         let delay = 100;
+      } else {
+         let delay = difficulty * 30;
+      }
+
+      let maxX = 510;
+      let minX = 0;
+      let maxY = 254;
+      let minY = 0;
+
+      let snakeWidth = 5;
+      let initSnakeLength = 5;
+      let maxSnakeLength = 1000;
+
+      let snake = Snake.new(initSnakeLength, snakeWidth, maxSnakeLength);
+      let apple = Square.new(100, 70, snakeWidth); //todo rand init of apple
+      let direction = 4;  // initial state is right movement
+
+      let seed = 10;
+
+      return this;
+   }
+
+   method void dispose() {
+      do apple.dispose();
+      do snake.dispose();
+      do Memory.deAlloc(this);
+      return;
+   }
+
+   method void play() {
+      if (isPlaying) {
+         do nextMove();
+      } else {
+         do gameOver();
+      }
+      return;
+   }
+
+   method void nextMove() {
+      // Check if we need to eat the apple
+      do checkNeedsToEatApple();
+
+      // Check if we colide with walls
+      do checkSnakeCollision();
+
+      // Move snake in former direction
+      do snake.move();
+
+      //Set the new direction
+      if (direction = 1) { do snake.moveUp(); }
+      if (direction = 2) { do snake.moveDown(); }
+      if (direction = 3) { do snake.moveLeft(); }
+      if (direction = 4) { do snake.moveRight(); }
+
+      // Check if we colide with walls
+      do checkSnakeCollision();
+
+      do Sys.wait(delay);  // delays the next movement
+      return;
+   }
+
+   method void gameOver() {
+      //TODO - erase all writee game over
+      do apple.erase();
+      do snake.erase();
+      do Output.moveCursor(10,27);
+      do Output.printString("Game Over");
+      do Sys.wait(1000);  // delays game exit
+      return;
+   }
+
+   method void checkSnakeCollision() {
+      let isPlaying = ~snake.isSnakeCollide(maxY, minY, maxX, minX);
+      return;
+   }
+
+   method void checkNeedsToEatApple() {
+      var int appleX, appleY;
+      var boolean didEatApple;
+
+      let appleX = apple.getX();
+      let appleY = apple.getY();
+
+      let didEatApple = snake.eatAppleIfNeeded(appleX, appleY);
+      if (didEatApple) {
+         do randApple();
+      }
+      return;
+   }
+
+   method void randApple() {
+      //We need to erase current apple, and regenerate a new one in a new location
+      var int appleX, appleY;
+
+      let appleX = rand(400);
+      let appleY = rand(200);
+
+      //do Output.printInt(appleX);
+      //do Output.printInt(appleY);
+
+      if ((appleX+10) > 500) {
+         let appleX = 10;
+      }
+
+      if ((appleY+10) > 200) {
+         let appleY = 70;
+      }
+
+      do apple.erase();
+      do apple.dispose();
+
+      let apple = Square.new(appleX+10, appleY+10, snakeWidth);
+
+      return;
+   }
+
+   // Loosly based on this algo - https://stackoverflow.com/questions/3062746/special-simple-random-number-generator
+   // With some combination from the table provided in wikipedia
+   method int rand(int range) {
+      var int a, c, tmp;
+      let a = 16807;
+      let c = 0;
+      let tmp = ( (a * seed) + c );
+      let seed = mod(tmp, range);
+      return seed;
+   }
+
+
+   // Based on - https://www.omnicalculator.com/math/modulo
+   method int mod(int dividend, int divisor) {
+      var int quotient, a, res;
+      let quotient = Math.divide(dividend, divisor);
+      //do Output.printInt(quotient);
+      let a = Math.multiply(quotient, divisor);
+      //do Output.printInt(a);
+      let res = dividend - a;
+      //do Output.printInt(res);
+      if (res < 0) {
+         let res = -res;
+      }
+      return res;
+   }
+
+   method void run() {
+      var char key;  // the key currently pressed by the user
+      var boolean exit;
+      let exit = false;
+      
+      while (~exit) {
+         // waits for a key to be pressed
+         let key = Keyboard.keyPressed();
+         while (key = 0) {
+            let key = Keyboard.keyPressed();
+            do play();
+         }
+         if (key = 81)  { let exit = true; }     // q key
+         if (key = 131) { let direction = 1; }   // up arrow
+         if (key = 133) { let direction = 2; }   // down arrow
+         if (key = 130) { let direction = 3; }   // left arrow
+         if (key = 132) { let direction = 4; }   // right arrow
+
+         // waits for the key to be released
+         while (~(key = 0)) {
+            let key = Keyboard.keyPressed();
+            do play();
+         }
+
+         let exit = ~isPlaying;
+
+     } // while
+     return;
+   }
+}
+
+
+

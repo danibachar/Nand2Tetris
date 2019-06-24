@@ -1,0 +1,21 @@
+// Copy of Main from the Sqare folder
+
+/** Initializes a new Square Dance game and starts running it. */
+class Main {
+    function void main() {
+        var SnakeGame game;
+        var int dif;
+
+        let dif = Keyboard.readInt(" Type Game Dificulaty - number between 1-10 (1 - very hard, 10 - very easy)");
+
+        //Clearing screen
+        do Screen.setColor(false);
+        do Screen.drawRectangle(0, 0, 511, 254);
+        
+        let game = SnakeGame.new(dif);
+
+        do game.run();
+        do game.dispose();
+        return;
+    }
+}

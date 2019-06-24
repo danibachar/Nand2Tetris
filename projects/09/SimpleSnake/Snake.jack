@@ -1,0 +1,162 @@
+//based on the Sqaure Class
+
+class Snake {
+
+   field int len; // length of snake
+   field int width; //snake square size
+   field int maxSize;
+   field Array xDots;
+   field Array yDots;
+
+   
+   constructor Snake new(int Alen, int Awidth, int maxSnakeSize) {
+      let len = Alen;
+      let width = Awidth;
+      let maxSize = maxSnakeSize;
+
+      let xDots = Array.new(maxSize);
+      let yDots = Array.new(maxSize);
+
+      do initSnake();
+
+      do draw();
+
+      return this;
+   }
+
+   method void initSnake() {
+      
+      //Horizontal snake init
+      var int i;
+      let i = 0;
+      while (i < len) { 
+         let xDots[i] = (70 - (i * width));//horizontal init
+         let yDots[i] = 70;
+         let i = i + 1;
+
+      }
+      return;
+   }
+
+   method void dispose() {
+      do xDots.dispose();
+      do yDots.dispose();
+      do Memory.deAlloc(this); //dispose this
+      return;
+   }
+
+   method void draw() {
+      var int i;
+      let i = 0;
+      do Screen.setColor(true);
+      while (i < len) { 
+         do Screen.drawRectangle(xDots[i], yDots[i], xDots[i] + width, yDots[i] + width);
+         let i = i + 1;
+
+      }
+      do Screen.setColor(false);
+      do Screen.drawRectangle(xDots[len], yDots[len], xDots[len] + width, yDots[len] + width);
+      return;
+   }
+
+
+   method void erase() {
+      var int i;
+      let i = 0;
+      while (i < len) { 
+         do Screen.setColor(false);
+         do Screen.drawRectangle(xDots[i], yDots[i], xDots[i] + width, yDots[i] + width);
+         let i = i + 1;
+
+      }
+      do Screen.setColor(false);
+      do Screen.drawRectangle(xDots[len], yDots[len], xDots[len] + width, yDots[len] + width);
+      return;
+   }
+
+   //Actions
+   method void move() {
+      var int i;
+      let i = len;
+      while (i > 0) { 
+         // classic game logic - moving each point to the previous one
+         let xDots[i] = xDots[(i - 1)];
+         let yDots[i] = yDots[(i - 1)];
+         let i = i - 1;
+      }
+      do draw();
+      return;
+   }
+
+   method void moveDown() {
+      let yDots[0] = yDots[0] + width;
+      return;
+   }
+   method void moveUp() {
+      let yDots[0] = yDots[0] - width;
+      return;
+   }
+   method void moveRight() {
+      let xDots[0] = xDots[0] + width;
+      return;
+   }
+   method void moveLeft() {
+      let xDots[0] = xDots[0] - width;
+      return;
+   }
+
+   method boolean eatAppleIfNeeded(int appleX, int appleY) {
+      var boolean touchedApple, notTooLong, didEatApple;
+      var int a,b;
+      let a = xDots[0] - appleX;
+      let a = Math.abs(a);
+      let b = yDots[0] - appleY;
+      let b = Math.abs(b);
+      let touchedApple = (a < width) & (b < width);
+
+      let notTooLong = (len < maxSize);
+      let didEatApple = (touchedApple & notTooLong);
+
+      if (didEatApple) {
+         let len = len + 1;
+      }
+      return didEatApple;
+   }
+
+   method boolean isSnakeCollide(int maxY, int minY, int maxX, int minX) {
+      var boolean colision;
+      var int i;
+
+      let colision = false;
+
+      //Checking collision with my on body
+      let i = len;
+      while (i > 0) { 
+         if ( (i > width) & (xDots[0] = xDots[i]) & (yDots[0] = yDots[i]) ) {
+            let colision = true;
+         }
+         let i = i - 1;
+      }
+
+      //Checking collision with given limits
+      if ( (xDots[0]+ width) > maxX ) {
+         let colision = true;
+      }
+
+      if ( (xDots[0]-width) < minX) {
+         let colision = true;
+      }
+
+      if ( (yDots[0]+ width) > maxY) {
+         let colision = true;
+      }
+
+      if ((yDots[0]-width) < minY) {
+         let colision = true;
+      }  
+
+
+      return colision;
+
+   }
+}

@@ -1,19 +1,9 @@
-
+from Lex import Lex, ARITHMETIC_COMMANDS, PUSH_OR_POP_COMMANDS
 
 class Parser:
     def __init__(self, src_file_name):
         self._line_index = 0
 
-        # init Commad Types
-        self.C_ARITMETIC = "C_ARITMETIC"
-        self.C_PUSH = "push"
-        self.C_POP = "pop"
-        self.C_LABEL = "C_LABEL"
-        self.C_GOTO = "C_GOTO"
-        self.C_IF = "C_IF"
-        self.C_FUNCTION = "funcction"
-        self.C_RETURN = "return"
-        self.C_CALL = "call"
 
         self._line_index = 0
         self._lines = []
@@ -26,7 +16,7 @@ class Parser:
             if len(strip_line) == 0 or strip_line[0:2] == '//':
                 continue
             #l = strip_line.replace(' ', '') # Removing whitespace
-            l = l.replace('\n', '')  # Removing new line
+            l = strip_line.replace('\n', '')  # Removing new line
             l = l.replace('\t', '') # Removing tabs
             l = l.split('/')[0] # Removing comments
 
@@ -34,7 +24,7 @@ class Parser:
 
     def current_command(self):
         curr_line = self._lines[self._line_index]
-        return curr_line.split(" ")
+        return curr_line.split(" ")[0]
 
     def advance(self):
         self._line_index+=1
@@ -43,10 +33,19 @@ class Parser:
         return len(self._lines) > self._line_index
 
     def command_type(self):
-        curr_line = self._lines[self._line_index]
+        command = self.current_command()
+        if command in PUSH_OR_POP_COMMANDS:
+            return Lex.C_PUSH_OR_POP
+        if command in ARITHMETIC_COMMANDS:
+            return Lex.C_ARITMETIC
+
+        raise Exception("Command Type not found in line = {}".format(curr_line))
+
 
     def arg1(self):
-        pass
+        curr_line = self._lines[self._line_index]
+        return curr_line.split(" ")[1]
 
     def arg2(self):
-        pass
+        curr_line = self._lines[self._line_index]
+        return curr_line.split(" ")[2]

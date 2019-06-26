@@ -1,8 +1,58 @@
 @256
 D=A
 @SP
+M=D
+// call function: Sys.init with 0 arguments
+@LABEL1
+D=A
+@SP
 A=M
 M=D
+@SP
+M=M+1
+@LCL
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@ARG
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@THIS
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@THAT
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@SP
+D=M
+@5
+D=D-A
+@0
+D=D-A
+@ARG
+M=D
+@SP
+D=M
+@LCL
+M=D
+@Sys.init
+0;JMP
+(LABEL1)
 // function: name Sys.init, with 0 local vars
 (Sys.init)
 // push constant 6
@@ -22,7 +72,7 @@ M=D
 @SP
 M=M+1
 // call function: Class1.set with 2 arguments
-@LABEL1
+@LABEL2
 D=A
 @SP
 A=M
@@ -71,7 +121,7 @@ D=M
 M=D
 @Class1.set
 0;JMP
-(LABEL1)
+(LABEL2)
 // pop temp 0
 @SP
 M=M-1
@@ -97,7 +147,7 @@ M=D
 @SP
 M=M+1
 // call function: Class2.set with 2 arguments
-@LABEL2
+@LABEL3
 D=A
 @SP
 A=M
@@ -146,7 +196,7 @@ D=M
 M=D
 @Class2.set
 0;JMP
-(LABEL2)
+(LABEL3)
 // pop temp 0
 @SP
 M=M-1
@@ -156,7 +206,7 @@ D=M
 @R5
 M=D
 // call function: Class1.get with 0 arguments
-@LABEL3
+@LABEL4
 D=A
 @SP
 A=M
@@ -205,9 +255,9 @@ D=M
 M=D
 @Class1.get
 0;JMP
-(LABEL3)
+(LABEL4)
 // call function: Class2.get with 0 arguments
-@LABEL4
+@LABEL5
 D=A
 @SP
 A=M
@@ -256,7 +306,7 @@ D=M
 M=D
 @Class2.get
 0;JMP
-(LABEL4)
+(LABEL5)
 // label WHILE
 (WHILE)
 // goto WHILE
@@ -318,7 +368,7 @@ M=D
 @5
 A=D-A
 D=M
-@RET_LABEL5
+@RET_LABEL6
 M=D
 @SP
 M=M-1
@@ -358,7 +408,7 @@ AM=M-1
 D=M
 @LCL
 M=D
-@RET_LABEL5
+@RET_LABEL6
 A=M
 0;JMP
 // function: name Class2.get, with 0 local vars
@@ -404,7 +454,7 @@ M=D
 @5
 A=D-A
 D=M
-@RET_LABEL6
+@RET_LABEL7
 M=D
 @SP
 M=M-1
@@ -444,7 +494,7 @@ AM=M-1
 D=M
 @LCL
 M=D
-@RET_LABEL6
+@RET_LABEL7
 A=M
 0;JMP
 // function: name Class1.set, with 0 local vars
@@ -503,7 +553,7 @@ M=D
 @5
 A=D-A
 D=M
-@RET_LABEL7
+@RET_LABEL8
 M=D
 @SP
 M=M-1
@@ -543,7 +593,7 @@ AM=M-1
 D=M
 @LCL
 M=D
-@RET_LABEL7
+@RET_LABEL8
 A=M
 0;JMP
 // function: name Class1.get, with 0 local vars
@@ -589,7 +639,7 @@ M=D
 @5
 A=D-A
 D=M
-@RET_LABEL8
+@RET_LABEL9
 M=D
 @SP
 M=M-1
@@ -629,6 +679,6 @@ AM=M-1
 D=M
 @LCL
 M=D
-@RET_LABEL8
+@RET_LABEL9
 A=M
 0;JMP

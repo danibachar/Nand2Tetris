@@ -197,18 +197,12 @@ class CodeWriter:
         self._write_raw_asm_code("M=D")
         # 7) LCL = SP - reposition of LCL
         self._write_copy_between_mem('SP', 'LCL')
-
-        # self._write_stack_to_register('D')
-        # self._write_d_register_to_mem("LCL")
         # 8) goto func_name
         self._write_raw_asm_code("@{}".format(func_name))
         self._write_raw_asm_code("0;JMP")
         # 9) self._write_label(returnAddress)
         self._write_label(return_address)
         #########
-
-        # Now we need to create a local segments for the callee
-        # we need to push `n` zeros to the stack - according to the arg count in the function decleration
 
     # Private
 

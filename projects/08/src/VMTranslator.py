@@ -37,6 +37,14 @@ print('.vm files to process - {}'.format(files_names))
 
 cw = CodeWriter(dest_file)
 
+# We Want to run preprocessing, to check if there is a need for bootstrapping and using the Sys.init
+# if none of the files contains this functions we should not add the bootstrapping
+# In general this case should not happen, but because some of the tests here are unit tests,
+# we will add the bootstrapping code only when we have Sys.vm file
+for file in files_names:
+    if "sys.vm" in file.lower():
+        cw.bootstrap()
+
 # RUN!
 for file in files_names:
     p = Parser(file)

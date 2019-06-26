@@ -12,19 +12,19 @@ class CodeWriter:
         self.label_counter = 0
         self.current_func_name = ""
 
+    # Public
+    def update_file_name(self, file_name):
+        self.file_prefix = file_name.split('/')[-1].split(".")[0]
+
+    def bootstrap(self):
         # SP=256 // address = 0
         self._write_raw_asm_code("@256") # A=256
         self._write_raw_asm_code("D=A") # D=256
         self._write_raw_asm_code("@SP") # A=256
         self._write_raw_asm_code("M=D") # D=256
-        # self._write_register_to_stack('D')
         # update the value from D onto SP which is in stack place 0
         # call Sys.init // address = 1
         self.write_call('call', 'Sys.init', '0')
-
-    # Public
-    def update_file_name(self, file_name):
-        self.file_prefix = file_name.split('/')[-1].split(".")[0]
 
     def close(self):
         self.f.close()

@@ -1,9 +1,3 @@
-@256
-D=A
-@SP
-A=M
-M=D
-// call function: Sys.init
 // push argument 1
 @1
 D=A

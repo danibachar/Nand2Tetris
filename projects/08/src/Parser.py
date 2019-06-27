@@ -7,7 +7,6 @@ class Parser:
 
         self._line_index = 0
         self._lines = []
-        self.contains_sysinit_call = False
         f = open(src_file_name)
         # First assesment of the Assembler
         for line in f.readlines():
@@ -19,12 +18,7 @@ class Parser:
             l = strip_line.replace('\n', '')  # Removing new line
             l = l.replace('\t', '') # Removing tabs
             l = l.split('/')[0] # Removing comments
-            if 'Sys.init' in l:
-                self.contains_sysinit_call = True
             self._lines.append(l)
-
-    def contains_sysinit_call(self):
-        return self.contains_sysinit_call
 
     def current_command(self):
         curr_line = self._lines[self._line_index]

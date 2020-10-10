@@ -63,10 +63,13 @@ class SymbolTable:
             return None
 
     def kindOf(self, identifier):
-        if identifier in self._class_table:
-            return SEGMENT_TO_IDENTIFIER_MAP[self._class_table[identifier][1]]
-        elif identifier in self._func_table:
+        # 1) Looking in the subroutine level table
+        # 2) If not found, Looking ub the class level table
+        # 3) If not found there, the variable is undifine and we will issue an error
+        if identifier in self._func_table:
             return SEGMENT_TO_IDENTIFIER_MAP[self._func_table[identifier][1]]
+        elif identifier in self._class_table:
+            return SEGMENT_TO_IDENTIFIER_MAP[self._class_table[identifier][1]]
         else:
             return None
 
